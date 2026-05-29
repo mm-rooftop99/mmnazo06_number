@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mmの数字謎</title>
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --panel: #ffffff;
+      --text: #222222;
+      --muted: #666666;
+      --border: #d8d8df;
+      --accent: #222222;
+      --danger: #b00020;
+      --success: #006b3f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 18px 14px;
+    }
+
+    .title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .meta {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--muted);
+      white-space: pre-line;
+    }
+
+    .main {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab-button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.15s;
+      min-width: 58px;
+    }
+
+    .tab-button:hover {
+      border-color: var(--accent);
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .stage-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .stage-head {
+      margin-bottom: 14px;
+    }
+
+    .stage-title {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .image-wrap {
+      width: 100%;
+      background: #eeeeee;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .stage-image {
+      display: block;
+      width: 100%;
+      max-height: 72vh;
+      object-fit: contain;
+      background: #ffffff;
+    }
+
+    .answer-area {
+      display: grid;
+      gap: 10px;
+    }
+
+    .answer-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .answer-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 13px;
+      font-size: 16px;
+      background: #ffffff;
+    }
+
+    .answer-input:focus {
+      outline: 2px solid rgba(0, 0, 0, 0.18);
+      outline-offset: 1px;
+    }
+
+    .submit-button,
+    .reset-button,
+    .post-button {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .reset-button {
+      background: #666666;
+      margin-top: 4px;
+      width: fit-content;
+    }
+
+    .post-button {
+      display: inline-block;
+      text-decoration: none;
+      margin-top: 16px;
+    }
+
+    .message {
+      min-height: 1.5em;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .message.ok {
+      color: var(--success);
+    }
+
+    .message.ng {
+      color: var(--danger);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 999;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .clear-box {
+      position: relative;
+      width: min(92vw, 460px);
+      background: #ffffff;
+      border: 3px solid #222222;
+      border-radius: 18px;
+      padding: 42px 24px 32px;
+      text-align: center;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      color: #333333;
+    }
+
+    .clear-title {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.2;
+      letter-spacing: 0.04em;
+    }
+
+    .clear-game-title {
+      margin-top: 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 14px;
+      }
+
+      .title {
+        font-size: 21px;
+      }
+
+      .main {
+        padding: 14px;
+      }
+
+      .tabs {
+        flex-wrap: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--bg);
+        padding: 8px 0 10px;
+      }
+
+      .tab-button {
+        min-width: 48px;
+        padding: 8px 13px;
+        font-size: 14px;
+      }
+
+      .stage-card {
+        padding: 14px;
+        border-radius: 14px;
+      }
+
+      .stage-title {
+        font-size: 20px;
+      }
+
+      .answer-row {
+        flex-direction: column;
+      }
+
+      .submit-button,
+      .answer-input {
+        width: 100%;
+      }
+
+      .clear-title {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <h1 class="title">mmの数字謎</h1>
+      <div class="meta">想定クリア時間：150min
+公開日：2026年5月29日
+制作：mm（@mm_syumida）#mmの謎解き</div>
+    </header>
+
+    <main class="main">
+      <nav class="tabs" id="tabs" aria-label="ステージタブ"></nav>
+
+      <section class="stage-card">
+        <div class="stage-head">
+          <h2 class="stage-title" id="stageTitle"></h2>
+        </div>
+
+        <div class="image-wrap">
+          <img class="stage-image" id="stageImage" src="" alt="謎画像" />
+        </div>
+
+        <div class="answer-area">
+          <div class="answer-row">
+            <input
+              id="answerInput"
+              class="answer-input"
+              type="text"
+              placeholder="答えを入力"
+              autocomplete="off"
+            />
+            <button class="submit-button" id="submitButton" type="button">送信</button>
+          </div>
+
+          <div id="message" class="message"></div>
+
+          <button
+            class="reset-button"
+            id="resetButton"
+            type="button"
+            style="display: none;"
+          >
+            進行状況をリセット
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="clearModal" aria-hidden="true">
+    <div class="clear-box" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+      <button class="close-button" id="closeModalButton" type="button" aria-label="閉じる">×</button>
+      <h2 class="clear-title" id="clearTitle">CLEAR！</h2>
+      <div class="clear-game-title">mmの数字謎</div>
+      <a class="post-button" id="postButton" href="#" target="_blank" rel="noopener noreferrer">POST</a>
+    </div>
+  </div>
+
+  <script>
+    function slide(number) {
+      return "./nazo06/スライド" + number + ".JPG";
+    }
+
+    const STORAGE_KEY = "mm_number_nazo_progress_v1";
+    const CLEAR_KEY = "mm_number_nazo_cleared_v1";
+
+    const stages = [
+      {
+        label: "A",
+        image: slide(1),
+        answers: ["６０", "60"]
+      },
+      {
+        label: "B",
+        image: slide(2),
+        answers: [
+          "-1",
+          "-１",
+          "－１",
+          "－1",
+          "まいなす１",
+          "まいなす1",
+          "マイナス１",
+          "マイナス1",
+          "まいなすいち",
+          "マイナスイチ",
+          "マイナスいち",
+          "まいなすイチ",
+          "まいなすわん",
+          "マイナスワン",
+          "まいなすワン",
+          "マイナスわん"
+        ]
+      },
+      {
+        label: "C",
+        image: slide(3),
+        answers: ["そろばん"]
+      },
+      {
+        label: "D",
+        image: slide(4),
+        answers: ["244526", "２４４５２６"]
+      },
+      {
+        label: "E",
+        image: slide(5),
+        answers: ["六"]
+      },
+      {
+        label: "F",
+        image: slide(6),
+        answers: ["13", "１３"]
+      },
+      {
+        label: "G",
+        image: slide(7),
+        answers: ["00040", "０００４０"]
+      }
+    ];
+
+    let currentStageIndex = 0;
+    let unlockedCount = 1;
+    let cleared = false;
+
+    const tabsEl = document.getElementById("tabs");
+    const stageTitleEl = document.getElementById("stageTitle");
+    const stageImageEl = document.getElementById("stageImage");
+    const answerInputEl = document.getElementById("answerInput");
+    const submitButtonEl = document.getElementById("submitButton");
+    const messageEl = document.getElementById("message");
+    const resetButtonEl = document.getElementById("resetButton");
+    const clearModalEl = document.getElementById("clearModal");
+    const closeModalButtonEl = document.getElementById("closeModalButton");
+    const postButtonEl = document.getElementById("postButton");
+
+    function normalizeAnswer(value) {
+      return String(value).trim();
+    }
+
+    function loadState() {
+      const savedProgress = Number(localStorage.getItem(STORAGE_KEY));
+      const savedCleared = localStorage.getItem(CLEAR_KEY) === "true";
+
+      if (!Number.isNaN(savedProgress) && savedProgress >= 1) {
+        unlockedCount = Math.min(savedProgress, stages.length);
+      }
+
+      cleared = savedCleared;
+
+      if (cleared) {
+        unlockedCount = stages.length;
+      }
+
+      currentStageIndex = Math.min(currentStageIndex, unlockedCount - 1);
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, String(unlockedCount));
+      localStorage.setItem(CLEAR_KEY, String(cleared));
+    }
+
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+
+      for (let i = 0; i < unlockedCount; i++) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tab-button";
+        button.textContent = stages[i].label;
+
+        if (i === currentStageIndex) {
+          button.classList.add("active");
+        }
+
+        button.addEventListener("click", () => {
+          currentStageIndex = i;
+          renderStage();
+        });
+
+        tabsEl.appendChild(button);
+      }
+    }
+
+    function renderStage() {
+      const stage = stages[currentStageIndex];
+
+      stageTitleEl.textContent = stage.label;
+      stageImageEl.src = stage.image;
+      stageImageEl.alt = "謎画像 " + stage.label;
+
+      answerInputEl.value = "";
+      setMessage("", "");
+
+      renderTabs();
+      updateResetButton();
+    }
+
+    function setMessage(text, type) {
+      messageEl.textContent = text;
+      messageEl.className = "message";
+
+      if (type === "ok") {
+        messageEl.classList.add("ok");
+      }
+
+      if (type === "ng") {
+        messageEl.classList.add("ng");
+      }
+    }
+
+    function isCorrectAnswer(input, stage) {
+      const normalizedInput = normalizeAnswer(input);
+      return stage.answers.some(answer => normalizeAnswer(answer) === normalizedInput);
+    }
+
+    function submitAnswer() {
+      const stage = stages[currentStageIndex];
+      const input = answerInputEl.value;
+
+      if (isCorrectAnswer(input, stage)) {
+        setMessage("正解。", "ok");
+
+        const isFinalStage = currentStageIndex === stages.length - 1;
+
+        if (isFinalStage) {
+          cleared = true;
+          unlockedCount = stages.length;
+          saveState();
+          updateResetButton();
+          showClearModal();
+          return;
+        }
+
+        if (unlockedCount < currentStageIndex + 2) {
+          unlockedCount = currentStageIndex + 2;
+          saveState();
+        }
+
+        setTimeout(() => {
+          currentStageIndex = currentStageIndex + 1;
+          renderStage();
+        }, 700);
+      } else {
+        setMessage("不正解", "ng");
+      }
+    }
+
+    function showClearModal() {
+      clearModalEl.classList.add("show");
+      clearModalEl.setAttribute("aria-hidden", "false");
+      updatePostButton();
+    }
+
+    function closeClearModal() {
+      clearModalEl.classList.remove("show");
+      clearModalEl.setAttribute("aria-hidden", "true");
+    }
+
+    function updatePostButton() {
+      const pageUrl = location.href;
+      const postText = [
+        "mmの数字謎をクリアしました！",
+        "#mmの謎解き #mmの数字謎",
+        pageUrl
+      ].join("\n");
+
+      const xUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(postText);
+      postButtonEl.href = xUrl;
+    }
+
+    function updateResetButton() {
+      if (cleared && currentStageIndex === stages.length - 1) {
+        resetButtonEl.style.display = "inline-block";
+      } else {
+        resetButtonEl.style.display = "none";
+      }
+    }
+
+    function resetProgress() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(CLEAR_KEY);
+
+      currentStageIndex = 0;
+      unlockedCount = 1;
+      cleared = false;
+
+      closeClearModal();
+      renderStage();
+    }
+
+    submitButtonEl.addEventListener("click", submitAnswer);
+
+    answerInputEl.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        submitAnswer();
+      }
+    });
+
+    closeModalButtonEl.addEventListener("click", closeClearModal);
+
+    clearModalEl.addEventListener("click", event => {
+      if (event.target === clearModalEl) {
+        closeClearModal();
+      }
+    });
+
+    resetButtonEl.addEventListener("click", resetProgress);
+
+    loadState();
+    renderStage();
+  </script>
+</body>
+</html>
