@@ -128,6 +128,17 @@
       background: #ffffff;
     }
 
+    .intro-text {
+      font-size: 16px;
+      line-height: 2;
+      white-space: pre-line;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
     .answer-area {
       display: grid;
       gap: 10px;
@@ -183,6 +194,8 @@
       min-height: 1.5em;
       font-size: 15px;
       font-weight: 700;
+      line-height: 1.7;
+      white-space: pre-line;
     }
 
     .message.ok {
@@ -303,7 +316,7 @@
   <div class="app">
     <header>
       <h1 class="title">mmの数字謎</h1>
-      <div class="meta">想定クリア時間：150min
+      <div class="meta">想定クリア時間：180min
 公開日：2026年5月29日
 制作：mm（@mm_syumida）#mmの謎解き</div>
     </header>
@@ -316,9 +329,11 @@
           <h2 class="stage-title" id="stageTitle"></h2>
         </div>
 
-        <div class="image-wrap">
+        <div class="image-wrap" id="imageWrap">
           <img class="stage-image" id="stageImage" src="" alt="謎画像" />
         </div>
+
+        <div class="intro-text" id="introText" style="display: none;"></div>
 
         <div class="answer-area">
           <div class="answer-row">
@@ -430,7 +445,9 @@
 
     const tabsEl = document.getElementById("tabs");
     const stageTitleEl = document.getElementById("stageTitle");
+    const imageWrapEl = document.getElementById("imageWrap");
     const stageImageEl = document.getElementById("stageImage");
+    const introTextEl = document.getElementById("introText");
     const answerInputEl = document.getElementById("answerInput");
     const submitButtonEl = document.getElementById("submitButton");
     const messageEl = document.getElementById("message");
@@ -491,11 +508,28 @@
       const stage = stages[currentStageIndex];
 
       stageTitleEl.textContent = stage.label;
-      stageImageEl.src = stage.image;
-      stageImageEl.alt = "謎画像 " + stage.label;
 
       answerInputEl.value = "";
       setMessage("", "");
+
+      if (stage.type === "intro") {
+        imageWrapEl.style.display = "none";
+        introTextEl.style.display = "block";
+        introTextEl.textContent = stage.text;
+
+        answerInputEl.style.display = "none";
+        submitButtonEl.textContent = "次へ";
+      } else {
+        imageWrapEl.style.display = "flex";
+        introTextEl.style.display = "none";
+        introTextEl.textContent = "";
+
+        stageImageEl.src = stage.image;
+        stageImageEl.alt = "謎画像 " + stage.label;
+
+        answerInputEl.style.display = "block";
+        submitButtonEl.textContent = "送信";
+      }
 
       renderTabs();
       updateResetButton();
@@ -521,7 +555,19 @@
 
     function submitAnswer() {
       const stage = stages[currentStageIndex];
-      const input = answerInputEl.value;
+
+      if (stage.type === "intro") {
+        if (unlockedCount < 2) {
+          unlockedCount = 2;
+          saveState();
+        }
+
+        currentStageIndex = 1;
+        renderStage();
+        return;
+      }
+
+      const input = normalizeAnswer(answerInputEl.value);
 
       if (isCorrectAnswer(input, stage)) {
         setMessage("正解。", "ok");
